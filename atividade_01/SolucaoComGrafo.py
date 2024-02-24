@@ -1,5 +1,4 @@
 import cv2
-import numpy
 
 # Função para contar elementos em uma imagem usando lógica de grafos
 
