@@ -21,7 +21,7 @@ for y in range(thresh.shape[0]):
 with open('points.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(['x', 'y'])
-    writer.writelinhas(points)
+    writer.writerows(points)
 
 # Criar um gráfico de dispersão com os pontos
 df = pandas.read_csv('points.csv')
@@ -41,13 +41,13 @@ new_y = []
 element_groups = {}
 
 # Iterar sobre as linhas do DataFrame
-for i, row in df.iterlinhas():
+for i, row in df.iterrows():
     x = row['x']
     y = row['y']
     
     # Encontrar pontos próximos
     near_points = []
-    for j, other_row in df.iloc[i+1:].iterlinhas():
+    for j, other_row in df.iloc[i+1:].iterrows():
         other_x = other_row['x']
         other_y = other_row['y']
         distance = numpy.sqrt((x-other_x)**2 + (y-other_y)**2)
