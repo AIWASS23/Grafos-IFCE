@@ -1,24 +1,37 @@
 import cv2
-
-# Função para contar elementos em uma imagem usando lógica de grafos
+import mahotas
 
 def contagemDeElementos(caminhoDaImagem):
-    # Carregar a imagem
-    imagem = cv2.imread(caminhoDaImagem, cv2.IMREAD_GRAYSCALE)
+    imagem = cv2.imread(caminhoDaImagem)
+    
+    if imagem.shape[2] == 3:
+        imagemCinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    else:
+        imagemCinza = imagem
+    
+    imagemCinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)  
+    suave = cv2.blur(imagemCinza, (7, 7)) 
+    
+    T = mahotas.thresholding.otsu(suave) 
+    bin = suave.copy() 
+    bin[bin > T] = 255 
+    bin[bin < 255] = 0 
+    bin = cv2.bitwise_not(bin)  
+    
+    bordas = cv2.Canny(bin, 70, 150)
+    
+    (lixo, imagemBinaria) = cv2.findContours(bordas.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
 
-    # Binarizar a imagem (considerando elementos como regiões brancas)
-    valorDoLimiar, imagemBinaria = cv2.threshold(imagem, 127, 255, cv2.THRESH_BINARY) # Nesse caso não preciso usa o valor do limiar 
+    if len(imagemBinaria.shape) == 3:
+        linhas, colunas, _ = imagemBinaria.shape
+    else:
+        linhas, colunas = imagemBinaria.shape
 
-    # Dimensões da imagem
-    linhas, colunas = imagemBinaria.shape
-
-    # Criar um grafo não direcionado
     grafo = {}
 
-    # Construir o grafo
     for linha in range(linhas):
         for coluna in range(colunas):
-            if imagemBinaria[linha][coluna] == 255:  # Se o pixel é branco (elemento)
+            if imagemBinaria[linha][coluna] == 255:  
                 vizinhos = []
                 for nlinha in range(max(0, linha - 1), min(linhas, linha + 2)):
                     for ncoluna in range(max(0, coluna - 1), min(colunas, coluna + 2)):
@@ -26,7 +39,6 @@ def contagemDeElementos(caminhoDaImagem):
                             vizinhos.append((nlinha, ncoluna))
                 grafo[(linha, coluna)] = vizinhos
 
-    # Contagem de componentes conexas usando DFS iterativo
     visitados = set()
     numeroDeElementos = 0
 
@@ -42,10 +54,8 @@ def contagemDeElementos(caminhoDaImagem):
 
     return numeroDeElementos
 
-# Lista de caminhos das imagens
 caminhoDaImagens = [ "img1.jpeg", "img2.jpeg", "img3.jpeg", "img4.jpeg", "img11.jpeg", "img22.jpeg", "img33.jpeg", "img44.jpeg" ]
 
-# Contar elementos em cada imagem e imprimir o resultado
 for caminho in caminhoDaImagens:
     numeroDeElementos = contagemDeElementos(caminho)
     print(f"A imagem {caminho} contém {numeroDeElementos} elementos.")
